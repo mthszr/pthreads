@@ -8,11 +8,14 @@
 #define TAMANHO_BD 100
 
 int BD[TAMANHO_BD];
-int contador_leitores = 0;
+int contador_leitores = 0; // essencial para permitir multiplos leitores simultâneos
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t db = PTHREAD_MUTEX_INITIALIZER;
+// mutex para proteger o contador de leitores de condições de corrida
+// garante que apenas um leitor modifique o contador de leitores por vez
+pthread_mutex_t mutex_contador = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_db = PTHREAD_MUTEX_INITIALIZER;
 
+// função para simular um atraso
 void sleep() {
     int i;
     for (i = 0; i < 200000000; i++) {
@@ -24,25 +27,25 @@ void *ler(void *threadid) {
     int thread_id = *((int *)threadid);
 
     while (1) {
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex_contador);
 
         contador_leitores += 1;
         if (contador_leitores == 1) {
-            pthread_mutex_lock(&db);  // bloqueia o banco de dados para leitura
+            pthread_mutex_lock(&mutex_db);  // bloqueia o banco de dados para leitura
         }
 
-        pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(&mutex_contador);
 
         int posicao = rand() % TAMANHO_BD;  // escolhe uma posição aleatória do banco de dados para ler
         int dado = BD[posicao];
         printf("Leitor %d leu o dado %d da posição %d\n", thread_id, dado, posicao);
 
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex_contador);
         contador_leitores -= 1;
         if (contador_leitores == 0) {
-            pthread_mutex_unlock(&db);  // libera o banco de dados para escrita
+            pthread_mutex_unlock(&mutex_db);  // libera o banco de dados para escrita
         }
-        pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(&mutex_contador);
 
         sleep();
     }
@@ -55,11 +58,11 @@ void *escrever(void *threadid) {
         int posicao = rand() % TAMANHO_BD;  // escolhe uma posição aleatória do banco de dados para escrever
         int data = thread_id;                // dado a ser escrito
 
-        pthread_mutex_lock(&db);  // bloqueia o banco de dados para escrita
+        pthread_mutex_lock(&mutex_db);  // bloqueia o banco de dados para escrita
 
         BD[posicao] = data;  // escreve o dado na posição escolhida
         printf("Escritor %d escreveu na posição %d\n", thread_id, posicao);
-        pthread_mutex_unlock(&db);  // libera o banco de dados para leitura/escrita
+        pthread_mutex_unlock(&mutex_db);  // libera o banco de dados para leitura/escrita
 
         sleep();  // simula o tempo de escrita
     }
