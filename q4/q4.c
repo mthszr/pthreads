@@ -29,7 +29,7 @@ void *processa_arquivo(void *arg) {
 
   int voto;
   while (fscanf(arquivo, "%d", &voto) == 1) {
-    if (voto >= 0 && voto < num_candidatos) {
+    if (voto >= 0 && voto <= num_candidatos) {
       // atualiza a contagem de votos para o candidato
       pthread_mutex_lock(&mutex_votos_candidato[voto]);
       votos_por_candidato[voto]++;
@@ -46,25 +46,30 @@ int main () {
   int num_arquivos;
   int num_threads;
 
-  scanf("Insira o n° de arquivos que serão lidos: %d\n", &num_arquivos);
-  scanf("Insira o n° de threads (deve ser o mesmo que o de arquivos): %d\n", &num_threads);
-  scanf("Insira o n° de candidatos que participam da eleição: %d\n", &num_candidatos);
+  printf("Insira o n° de arquivos que serão lidos: "); // máximo de 5
+  scanf("%d", &num_arquivos);
+
+  printf("Insira o n° de threads: "); // deve ser igual ao número de arquivos
+  scanf("%d", &num_threads);
+
+  printf("Insira o n° de candidatos que participam da eleição: "); // máximo de 10
+  scanf("%d", &num_candidatos);
 
   // aloca memória para o vetor de votos e mutexes
-  votos_por_candidato = calloc(num_candidatos, sizeof(int));
+  votos_por_candidato = calloc(num_candidatos + 1, sizeof(int));
   if (votos_por_candidato == NULL) {
     printf("Erro ao alocar memória para votos_por_candidato\n");
     exit(-1);
   }
 
-  mutex_votos_candidato = malloc(num_candidatos * sizeof(pthread_mutex_t));
+  mutex_votos_candidato = malloc((num_candidatos + 1) * sizeof(pthread_mutex_t));
   if(mutex_votos_candidato == NULL) {
     printf("Erro ao alocar memória para mutex_votos_candidato\n");
     free(votos_por_candidato);
     exit(-1);
   }
 
-  for (int i = 0; i < num_candidatos; i++) {
+  for (int i = 0; i <= num_candidatos; i++) {
     if (pthread_mutex_init(&mutex_votos_candidato[i], NULL) != 0) {
       printf("Erro ao inicializar mutex para o candidato %d\n", i);
       free(votos_por_candidato);
@@ -123,7 +128,7 @@ int main () {
 
   // calcula e imprime os resultados
   int total_votos = 0;
-  for (int i = 0; i < num_candidatos; i++) {
+  for (int i = 0; i <= num_candidatos; i++) {
     total_votos += votos_por_candidato[i];
   }
 
@@ -134,7 +139,7 @@ int main () {
      votos_por_candidato[0], 
      (votos_por_candidato[0] * 100.0) / total_votos);
 
-  for (int i = 1; i < num_candidatos; i++) {
+  for (int i = 1; i <= num_candidatos; i++) {
     printf("- Candidato %d: %d votos (%.2f%%)\n", i,
     votos_por_candidato[i],
     (votos_por_candidato[i] * 100.0) / total_votos);
@@ -143,7 +148,7 @@ int main () {
 
   int id_candidato_vencedor = 1;
   int max_votos = votos_por_candidato[1];
-  for (int i = 2; i < num_candidatos; i++) {
+  for (int i = 2; i <= num_candidatos; i++) {
     if (votos_por_candidato[i] > max_votos) {
       max_votos = votos_por_candidato[i];
       id_candidato_vencedor = i;
