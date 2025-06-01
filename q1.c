@@ -33,16 +33,13 @@ int main() {
         return_code = pthread_create(&thread[i], NULL, contar, (void *)threadid[i]);
 
         if (return_code) {
-            printf("Error creating thread %d: %d\n", i, return_code);
+        printf("Error creating thread %d: %d\n", i, return_code);
             exit(-1);
-        }
+    }
     }
 
     for (i = 0; i < NUM_THREADS; i++) {
       pthread_join(thread[i], NULL);
-    }
-
-    for (i = 0; i < NUM_THREADS; i++) {
       free(threadid[i]);
     }
 
