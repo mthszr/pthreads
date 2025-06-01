@@ -10,25 +10,25 @@
 // banco de dados para simular leituras e escritas
 int BD[TAMANHO_BD];
 
-// variaveis de estado
+// variáveis de estado
 int leitores_ativos = 0;    
 int escrevendo = 0; // deve ser 0 ou 1
 int leitores_esperando = 0;   
 int escritores_esperando = 0;  
 
-// protege o acesso às variaveis de estado
+// protege o acesso às variáveis de estado
 pthread_mutex_t mutex_estado = PTHREAD_MUTEX_INITIALIZER;
 // condição para os leitores esperarem
 pthread_cond_t pode_ler = PTHREAD_COND_INITIALIZER;
 // condição para os escritores esperarem
 pthread_cond_t pode_escrever = PTHREAD_COND_INITIALIZER;
 
-// funcao para simular um "trabalho" ou "atraso"
-void sleep_custom() {
-    int i;
-    for (i = 0; i < 200000000; i++) {
-        ;  // loop vazio para gastar tempo
-    }
+// simula um atraso
+void sleep() {
+  int i;
+  for (i = 0; i < 200000000; i++) {
+    ; 
+  }
 }
 
 void *ler(void *threadid) {
@@ -67,7 +67,7 @@ void *ler(void *threadid) {
 
     pthread_mutex_unlock(&mutex_estado);
 
-    sleep_custom(); 
+    sleep();
   }
 }
 
@@ -112,7 +112,7 @@ void *escrever(void *threadid) {
 
     pthread_mutex_unlock(&mutex_estado);
 
-    sleep_custom();
+    sleep();
   }
 }
 
