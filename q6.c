@@ -18,12 +18,9 @@ int escritores_esperando = 0;
 
 // protege o acesso às variáveis de estado
 pthread_mutex_t mutex_estado = PTHREAD_MUTEX_INITIALIZER;
-// condição para os leitores esperarem
 pthread_cond_t pode_ler = PTHREAD_COND_INITIALIZER;
-// condição para os escritores esperarem
 pthread_cond_t pode_escrever = PTHREAD_COND_INITIALIZER;
 
-// simula um atraso
 void sleep() {
   int i;
   for (i = 0; i < 200000000; i++) {
@@ -124,57 +121,23 @@ int main() {
   int *threadid_leitora[THREADS_LEITORAS];
   int *threadid_escritora[THREADS_ESCRITORAS];
 
-  int return_code;
-  int i;
-
   // inicializa o banco de dados
-  for (i = 0; i < TAMANHO_BD; i++) {
+  for (int i = 0; i < TAMANHO_BD; i++) {
     BD[i] = -1;
   }
 
   // inicializa as threads escritoras
-  for (i = 0; i < THREADS_ESCRITORAS; i++) {
+  for (int i = 0; i < THREADS_ESCRITORAS; i++) {
     threadid_escritora[i] = (int *)malloc(sizeof(int));
-
-    if (threadid_escritora[i] == NULL) {
-      printf("Falha ao alocar memória para threadid_escritora\n");
-      exit(-1);
-    }
-
     *threadid_escritora[i] = i;
-    return_code = pthread_create(&thread_escritora[i], NULL, escrever, (void *)threadid_escritora[i]);
-
-    if (return_code) {
-      printf("Erro ao criar a thread escritora %d: %d\n", i, return_code);
-      exit(-1);
-    }
+    pthread_create(&thread_escritora[i], NULL, escrever, (void *)threadid_escritora[i]);
   }
 
-  for (i = 0; i < THREADS_LEITORAS; i++) {
+  // inicializa as threads leitoras
+  for (int i = 0; i < THREADS_LEITORAS; i++) {
     threadid_leitora[i] = (int *)malloc(sizeof(int));
-
-    if (threadid_leitora[i] == NULL) {
-      printf("Falha ao alocar memória para threadid_leitora\n");
-      exit(-1);
-    }
-
     *threadid_leitora[i] = i;
-    return_code = pthread_create(&thread_leitora[i], NULL, ler, (void *)threadid_leitora[i]);
-    
-    if (return_code) {
-      printf("Erro ao criar a thread leitora %d: %d\n", i, return_code);
-      exit(-1);
-    }
-  }
-
-  for (i = 0; i < THREADS_LEITORAS; i++) {
-    pthread_join(thread_leitora[i], NULL);
-    free(threadid_leitora[i]);
-  }
-
-  for (i = 0; i < THREADS_ESCRITORAS; i++) {
-    pthread_join(thread_escritora[i], NULL);
-    free(threadid_escritora[i]);
+    pthread_create(&thread_leitora[i], NULL, ler, (void *)threadid_leitora[i]);  
   }
 
   pthread_exit(NULL);
