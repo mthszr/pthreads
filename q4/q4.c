@@ -17,8 +17,9 @@ void *processa_arquivo(void *arg) {
   thread_arg_t *dados_thread = (thread_arg_t *)arg;
   int id_arquivo = dados_thread->id_arquivo;
 
-  char nome_arquivo[FILENAME_MAX];
+  char nome_arquivo[20];
 
+  // formato do nome do arquivo: x.in, onde x é o número do arquivo
   sprintf(nome_arquivo, "%d.in", id_arquivo);
   FILE *arquivo = fopen(nome_arquivo, "r");
 
@@ -38,6 +39,7 @@ void *processa_arquivo(void *arg) {
       printf("ATENÇÃO: Voto inválido %d encontrado no arquivo %s e ignorado\n", voto, nome_arquivo);
     }
   }
+
   fclose(arquivo);
   pthread_exit(NULL);
 }
@@ -48,8 +50,14 @@ int imprimir_resultados() {
     total_votos += votos_por_candidato[i];
   }
 
-  printf("Total de votos computados: %d\n", total_votos);
-  printf("\nResultado da votação:\n");
+  if (total_votos == 0) {
+    printf("\nNenhum voto computado.\n");
+    return 0;
+  }
+
+  printf("\n--- Resultado Final da Votação ---\n");
+  printf("Total de votos apurados: %d\n\n", total_votos);
+  //printf("\nResultado da votação:\n");
 
   printf("- Votos em branco: %d (%.2f%%)\n", votos_por_candidato[0], (votos_por_candidato[0] * 100.0) / total_votos);
 
@@ -77,13 +85,13 @@ int main () {
   int num_arquivos;
   int num_threads;
 
-  printf("Insira o n° de arquivos que serão lidos: "); // máximo de 5
+  printf("Quantos arquivos para ler? "); // máximo de 5
   scanf("%d", &num_arquivos);
 
-  printf("Insira o n° de threads (deve ser o mesmo de arquivos para esta versão): "); // deve ser igual ao número de arquivos
+  printf("Quantas threads (o mesmo n° de arquivos, pfv)? "); // deve ser igual ao número de arquivos
   scanf("%d", &num_threads);
 
-  printf("Insira o n° de candidatos que participam da eleição: "); // máximo de 10
+  printf("Quantos candidatos participam da eleição? "); // máximo de 10
   scanf("%d", &num_candidatos);
 
   votos_por_candidato = calloc(num_candidatos + 1, sizeof(int));
@@ -94,19 +102,30 @@ int main () {
     pthread_mutex_init(&mutex_votos_candidato[i], NULL);
   }
 
-  // aloca memória para as threads
+  // aloca memória para as threads e os argumentos delas
   pthread_t *threads = malloc(num_threads * sizeof(pthread_t));
-
-  // aloca memória para os argumentos das threads
   thread_arg_t *args_threads = malloc(num_threads * sizeof(thread_arg_t));
 
-  // cria as threads para processar os arquivos
+  // cria as threads 
   for (int i = 0; i < num_threads; i++) {
     args_threads[i].id_arquivo = i + 1;  // arquivos começam em 1
     pthread_create(&threads[i], NULL, processa_arquivo, (void *)&args_threads[i]);
   }
 
+  for (int i = 0; i < num_threads; i++) {
+    pthread_join(threads[i], NULL);
+  }
+
   imprimir_resultados();
+
+  for (int i = 0; i <= num_candidatos; i++) {
+    pthread_mutex_destroy(&mutex_votos_candidato[i]);
+  }
+
+  free(votos_por_candidato);
+  free(mutex_votos_candidato);
+  free(threads);
+  free(args_threads);
 
   pthread_exit(NULL);
 } 

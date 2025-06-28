@@ -140,5 +140,19 @@ int main() {
     pthread_create(&thread_leitora[i], NULL, ler, (void *)threadid_leitora[i]);  
   }
 
+  for (int i = 0; i < THREADS_LEITORAS; i++) {
+    pthread_join(thread_leitora[i], NULL);
+    free(threadid_leitora[i]);
+  }
+
+  for (int i = 0; i < THREADS_ESCRITORAS; i++) {
+    pthread_join(thread_escritora[i], NULL);
+    free(threadid_escritora[i]);
+  }
+
+  pthread_mutex_destroy(&mutex_estado);
+  pthread_cond_destroy(&pode_ler);
+  pthread_cond_destroy(&pode_escrever);
+
   pthread_exit(NULL);
 }

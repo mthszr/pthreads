@@ -21,19 +21,21 @@ void *contar(void *threadid) {
 }
 
 int main() {
-    pthread_t thread[NUM_THREADS];
-    int *threadid[NUM_THREADS];
+  pthread_t thread[NUM_THREADS];
+  int *threadid[NUM_THREADS];
 
-    for (int i = 0; i < NUM_THREADS; i++) {
-      threadid[i] = (int *)malloc(sizeof(int));
-      *threadid[i] = i;
-      pthread_create(&thread[i], NULL, contar, (void *)threadid[i]);
-    }
+  for (int i = 0; i < NUM_THREADS; i++) {
+    threadid[i] = (int *)malloc(sizeof(int));
+    *threadid[i] = i;
+    pthread_create(&thread[i], NULL, contar, (void *)threadid[i]);
+  }
 
-    for (int i = 0; i < NUM_THREADS; i++) {
-      pthread_join(thread[i], NULL);
-      free(threadid[i]);
-    }
+  for (int i = 0; i < NUM_THREADS; i++) {
+    pthread_join(thread[i], NULL);
+    free(threadid[i]);
+  }
 
-    pthread_exit(NULL);
+  pthread_mutex_destroy(&flag_mutex);
+  
+  pthread_exit(NULL);
 }
